@@ -3,4 +3,4 @@ Bagging exercise in Alex Lyford's Statistical Learning class at Middlebury Colle
 
 This is a test line from RStudio.
 
-This is bea's test line
+this is bea's test line
