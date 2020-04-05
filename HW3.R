@@ -7,44 +7,6 @@ library(rattle)
 #begin with the titanic dataset
 titanic <- read_csv(file.choose())
 
-#create indexes 
-indexes <- sample(1:nrow(titanic), 
-                  size = nrow(titanic),
-                  replace = TRUE)
-
-training.sample.1 <- titanic[indexes, ]
-testing.sample.1 <- titanic[-indexes, ]
-
-
-mean.x <- mean(training.sample.1$Pclass)
-mean.y <- mean(training.sample.1$Survived)
-x <- training.sample.1$Pclass
-y <- training.sample.1$Survived
-
-# mean.testx <- mean(testing.sample.1$Pclass)
-# mean.testy <- mean(testing.sample.1$Survived)
-testx <- testing.sample.1$Pclass
-testy <- testing.sample.1$Survived
-
-#Beta1 (slope)
-beta1 <- sum((x - mean.x)*(y - mean.y)) / sum((x - mean.x)^2)
-
-beta0 <- mean.y - beta1*mean.x
-
-yhat <- round(beta0 + beta1*testx)
-
-compare.y <- data.frame(yhat, testy)
-
-accurate <- ifelse(compare.y$yhat == compare.y$testy, 
-       1,
-       0)
-
-accuracy <- sum(accurate)/length(accurate)
-
-error <- NULL
-
-
-
 
 # have a dataset ready to use
 
@@ -54,17 +16,21 @@ bagging.function <- function(data, yvar, xvar, n){
 error <- NULL
 dataset <- data.frame(data)
 
+notNA <- which(is.na(dataset[[xvar]]) == FALSE & is.na(dataset[[yvar]]) == FALSE, arr.ind=TRUE) 
+dataset2 <- dataset[notNA, ]
+
+
   for(i in 1:n){
     
-    indexes <- sample(1:nrow(dataset), 
-                      size = nrow(dataset),
+    indexes <- sample(1:nrow(dataset2), 
+                      size = nrow(dataset2),
                       replace = TRUE)
     
-    train <- dataset[indexes, ]
-    test <- dataset[-indexes, ]
+    train <- dataset2[indexes, ]
+    test <- dataset2[-indexes, ]
     
-    meanx[i] <- mean(train[[xvar]])
-    meany[i] <- mean(train[[yvar]])
+    meanx <- mean(train[[xvar]])
+    meany <- mean(train[[yvar]])
     
     x <- train[[xvar]]
     y <- train[[yvar]]
@@ -91,12 +57,13 @@ dataset <- data.frame(data)
 
 
 
-bagging.function(titanic, Survived, Pclass, 25)
+bagging.function(titanic, "Survived", "Pclass", 25)
+bagging.function(titanic, "Survived", "Age", 25)
 
 
-
-
-
+#try with mtcars data
+bagging.function(mtcars, "am", "mpg", 25)
+bagging.function(mtcars, "am", "cyl", 25)
 
 
 
