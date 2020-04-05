@@ -41,11 +41,73 @@ accurate <- ifelse(compare.y$yhat == compare.y$testy,
 
 accuracy <- sum(accurate)/length(accurate)
 
-
-rounded.predict <- round(prediction[,0])
-
+error <- NULL
 
 
-bagging.m1 <- bagging(factor(Survived) ~ Age + factor(Pclass) + Sex + SibSp,
-                      data = titanic,
-                      coob = TRUE)
+
+
+# have a dataset ready to use
+
+
+bagging.function <- function(data, yvar, xvar, n){
+
+  for(i in 1:n){
+    
+    dataset <- data.frame(data)
+    
+    indexes <- sample(1:nrow(dataset), 
+                      size = nrow(dataset),
+                      replace = TRUE)
+    
+    train <- dataset[indexes, ]
+    test <- dataset[-indexes, ]
+    
+    meanx <- mean(train$xvar)
+    meany <- mean(train$yvar)
+    x <- train$xvar
+    y <- train$yvar
+    
+    testx <- test$xvar
+    testy <- test$yvar
+    
+    beta1 <- sum((x - meanx)*(y - meany)) / sum((x - meanx)^2)
+    
+    beta0 <- mean.y - beta1*mean.x
+    
+    yhat <- round(beta0 + beta1*testx)
+    
+    compare.y <- data.frame(yhat, testy)
+    
+    accurate <- ifelse(compare.y$yhat == compare.y$testy, 
+                       1,
+                       0)
+    
+    error[i] <- 1 - sum(accurate)/length(accurate)
+    
+    }
+    
+    return(mean(error))}
+
+
+
+bagging.function(titanic, Survived, Pclass, 25)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
