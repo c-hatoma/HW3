@@ -16,23 +16,31 @@ training.sample.1 <- titanic[indexes, ]
 testing.sample.1 <- titanic[-indexes, ]
 
 
-training.sample.1.Y <- training.sample.1[,2] #survived
-training.sample.1.X <- training.sample.1[,3] #pclass
+mean.x <- mean(training.sample.1$Pclass)
+mean.y <- mean(training.sample.1$Survived)
+x <- training.sample.1$Pclass
+y <- training.sample.1$Survived
 
-training.s1.matrix <- cbind(training.sample.1.Y, training.sample.1.X)
+# mean.testx <- mean(testing.sample.1$Pclass)
+# mean.testy <- mean(testing.sample.1$Survived)
+testx <- testing.sample.1$Pclass
+testy <- testing.sample.1$Survived
 
+#Beta1 (slope)
+beta1 <- sum((x - mean.x)*(y - mean.y)) / sum((x - mean.x)^2)
 
+beta0 <- mean.y - beta1*mean.x
 
+yhat <- round(beta0 + beta1*testx)
 
+compare.y <- data.frame(yhat, testy)
 
+accurate <- ifelse(compare.y$yhat == compare.y$testy, 
+       1,
+       0)
 
-tree.test <- rpart(factor(Survived) ~ factor(Pclass),
-                   data = training.sample.1)
+accuracy <- sum(accurate)/length(accurate)
 
-fancyRpartPlot(tree.test)
-
-prediction <- predict(tree.test,
-        data.frame(Pclass = "3"))
 
 rounded.predict <- round(prediction[,0])
 
