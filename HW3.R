@@ -51,9 +51,10 @@ error <- NULL
 
 bagging.function <- function(data, yvar, xvar, n){
 
+error <- NULL
+dataset <- data.frame(data)
+
   for(i in 1:n){
-    
-    dataset <- data.frame(data)
     
     indexes <- sample(1:nrow(dataset), 
                       size = nrow(dataset),
@@ -62,17 +63,18 @@ bagging.function <- function(data, yvar, xvar, n){
     train <- dataset[indexes, ]
     test <- dataset[-indexes, ]
     
-    meanx <- mean(train$xvar)
-    meany <- mean(train$yvar)
-    x <- train$xvar
-    y <- train$yvar
+    meanx[i] <- mean(train[[xvar]])
+    meany[i] <- mean(train[[yvar]])
     
-    testx <- test$xvar
-    testy <- test$yvar
+    x <- train[[xvar]]
+    y <- train[[yvar]]
+    
+    testx <- test[[xvar]]
+    testy <- test[[yvar]]
     
     beta1 <- sum((x - meanx)*(y - meany)) / sum((x - meanx)^2)
     
-    beta0 <- mean.y - beta1*mean.x
+    beta0 <- meany - beta1*meanx
     
     yhat <- round(beta0 + beta1*testx)
     
@@ -83,17 +85,13 @@ bagging.function <- function(data, yvar, xvar, n){
                        0)
     
     error[i] <- 1 - sum(accurate)/length(accurate)
-    
-    }
+  }
     
     return(mean(error))}
 
 
 
 bagging.function(titanic, Survived, Pclass, 25)
-
-
-
 
 
 
