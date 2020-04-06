@@ -86,29 +86,81 @@ bagging.function(titanic, "Survived", "Age", 25)
 bagging.function(mtcars, "am", "mpg", 25)
 bagging.function(mtcars, "am", "cyl", 25)
 
+data <- titanic
+yvar <- Survived
+xvar <- Pclass
 
 #LM FUNCTION COMPARISON
+
 lm.function <- function(data, yvar, xvar){
+  #Inputs:
+  #data: dataset to use, either built-in on R or in the environment
+  #yvar: outcome variable
+  #xvar: predictor variable
+  #Output: percentage of error
+  
+  #create a null vector of errors for each of the models
+  error <- NULL
+  
+  #save data as a dataframe
+  dataset <- data.frame(data)
+  
+  #get rid of observations in which the xvar and/or yvar are missing
+  #save it to dataset2
+  notNA <- which(is.na(dataset[[xvar]]) == FALSE & is.na(dataset[[yvar]]) == FALSE, arr.ind=TRUE) 
+  dataset2 <- dataset[notNA, ]
+    
+    #create index for bagging
+    indexes <- sample(1:nrow(dataset2), 
+                      size = nrow(dataset2),
+                      replace = TRUE)
+    
+    #create training data with the indexes created above
+    train <- dataset2[indexes, ]
+    
+    #create testing datta with the indexes not included in training data
+    test <- dataset2[-indexes, ]
+    
+    #vectors of x and y variables from the training data
+    x <- train[[xvar]]
+    y <- train[[yvar]]
+    
+    #vectors of x and y variables from the testing data
+    testx <- test[[xvar]]
+    testy <- test[[yvar]]
+   
+    # yvar <- train[[yvar]]
+    # xvar <- train[[xvar]]
+    
+    #create lm function
+    model1 <- lm(Survived ~ Pclass,
+                 data = train)
+    
+    #predict yhat, the predicted outcome, for testing data
+    yhat <- round(predict.lm(model1,
+                    test,
+                    type = 'response'))
+    
+    #compare yhat (predicted y) and testy (the actual y) for accuracy
+    accurate <- ifelse(yhat == testy, 
+                       1,
+                       0)
+    
+    #calculate and return the error
+    error <- 1 - sum(accurate)/length(accurate)
+  
+  return(error)
+}
 
-model1 <- lm(yvar ~ xvar,
-   data = data)
 
-model1predictions <- predict(model1,
-                             data)
-
-model1predictions.rounded <- round(model1predictions)
+#using titanic data
+lm.function(titanic, "Survived", "Pclass")
+lm.function(titanic, "Survived", "Age")
 
 
-comparison <- data.frame(data$Survived, model1predictions.rounded) %>%
-  mutate(correct = ifelse(Survived == model1predictions.rounded, 1, 0))
-
-error.lm <- 1 - mean(comparison$correct) 
-
-
-
-
-
-
+#try with mtcars data
+lm.function(mtcars, "am", "mpg")
+lm.function(mtcars, "am", "cyl")
 
 
 
