@@ -87,8 +87,8 @@ bagging.function(mtcars, "am", "mpg", 25)
 bagging.function(mtcars, "am", "cyl", 25)
 
 data <- titanic
-yvar <- Survived
-xvar <- Pclass
+yvar <- "Survived"
+xvar <- "Pclass"
 
 #LM FUNCTION COMPARISON
 
@@ -129,16 +129,17 @@ lm.function <- function(data, yvar, xvar){
     testx <- test[[xvar]]
     testy <- test[[yvar]]
    
-    # yvar <- train[[yvar]]
-    # xvar <- train[[xvar]]
+    model.data <- train
     
     #create lm function
-    model1 <- lm(Survived ~ Pclass,
-                 data = train)
+    model1 <- lm(model.data[[yvar]] ~ model.data[[xvar]],
+                 data = model.data)
+    
+    model.data <- test
     
     #predict yhat, the predicted outcome, for testing data
     yhat <- round(predict.lm(model1,
-                    test,
+                    model.data,
                     type = 'response'))
     
     #compare yhat (predicted y) and testy (the actual y) for accuracy
