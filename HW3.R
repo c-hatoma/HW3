@@ -87,6 +87,28 @@ bagging.function(mtcars, "am", "mpg", 25)
 bagging.function(mtcars, "am", "cyl", 25)
 
 
+#LM FUNCTION COMPARISON
+lm.function <- function(data, yvar, xvar){
+
+model1 <- lm(yvar ~ xvar,
+   data = data)
+
+model1predictions <- predict(model1,
+                             data)
+
+model1predictions.rounded <- round(model1predictions)
+
+
+comparison <- data.frame(data$Survived, model1predictions.rounded) %>%
+  mutate(correct = ifelse(Survived == model1predictions.rounded, 1, 0))
+
+error.lm <- 1 - mean(comparison$correct) 
+
+
+
+
+
+
 
 
 
