@@ -176,45 +176,54 @@ lm.function(mtcars, "am", "cyl")
 
 #Similarities: 
 
-
-#Differences:
-
 #If one runs the bagged function with the same input multiple times, 
 #the error rate remains similar each time the function runs.
 
-#For example, the error rate for examining the effects of passenger class on survival rate
-#in the titanic dataset with 25 bagged linear models is relatively stable around 0.32.
+#If we run the bagging function a 1000 times to examine the error rate 
+#the effects of passenger class on survival rate in the titanic dataset 
+#with 25 bagged linear models, the average error rates is around 0.32.
 #The code is below:
 bagging.function(titanic, "Survived", "Pclass", 25)
-
-#However, the lm function returns a wider range of error rates. 
-
-#For the same example as above, the lm function sometimes returns an error rate of 0.29
-#while sometimes it returns an error rate as high as 0.36. The code is below:
-lm.function(titanic, "Survived", "Pclass")
-
-# However, looking at the ranges of the two functions when bootstrapped,
-# we see that the difference between the bagged range and lm range are small.
-
-# The improvement in variance from using bagging on a linear regression when compared to 
-# a regular linear regression model is this small because although bagging reduces variance,
-# linear regression has low variance already.
-
-
-
-
-# Works Cited:
-# https://towardsdatascience.com/understanding-the-effect-of-bagging-on-variance-and-bias-visually-6131e6ff1385
-
 
 bag <- NULL
 for (i in 1:1000){
   bag[i] <- bagging.function(titanic, "Survived", "Pclass", 25)
 }
 
+summary(bag)
+var(bag)
+
+#When we look at the summary of the vector bag, which contains the error rates
+#of running the bagging function a 1000 times, it shows us that the minimum is around
+#0.25 and the maximum is around 0.39. The variance of the error rate is quite small, 
+#of around 0.0004.
+
+
+#We find that the error rates for the lm function is quite similar to the 
+#bagging function. For the same example as above, when we run the lm function 
+#a 1000 times, the average error rate is also around 0.32.
+lm.function(titanic, "Survived", "Pclass")
+
 lm <- NULL
 for (i in 1:1000){
   lm[i] <- lm.function(titanic, "Survived", "Pclass")}
+
+summary(lm)
+var(lm)
+
+#When we look at the summary of the vector lm, it shows us that the minimum is around
+#0.24 and the maximum is around 0.39, which is very similar to the range of error rates
+#of the bagging function. The variance of the error rate is also around 0.0004, 
+#which is very similar to the bagging function.
+
+# The improvement in variance from using bagging on a linear regression when compared to 
+# a regular linear regression model is this small because although bagging reduces variance,
+# linear regression has low variance already.
+
+
+# Works Cited:
+# https://towardsdatascience.com/understanding-the-effect-of-bagging-on-variance-and-bias-visually-6131e6ff1385
+
 
 
 
