@@ -205,6 +205,8 @@ for (i in 1:1000){
   bag[i] <- bagging.function(titanic, "Survived", "Pclass", 25)
 }
 
+View(bag)
+
 lm <- NULL
 for (i in 1:1000){
   lm[i] <- lm.function(titanic, "Survived", "Pclass")}
@@ -216,19 +218,20 @@ for (i in 1:1000){
 
 
 
-##--------------------------------------------------TEST for a yhat function
+#_____________________________________________________________________
 
-#YHAT FUNCTION (BAGGING)
-yhat.function <- function(data, yvar, xvar, n){
+#create a function that generates a list to be used to generate a confusion matrix for our BAGGING model
+cm.bagging.function <- function(data, yvar, xvar, n){
   #Inputs:
   #data: dataset to use, either built-in on R or in the environment
   #yvar: outcome variable
   #xvar: predictor variable
   #n: number of bagged linear models user wants
-  #Output: yhat for the bagged model 
+  #Output: list of preditions and true results (to be used to build a confusion matrix)
   
   #create a null vector of errors for each of the models
-  error <- NULL
+  beta1 <- NULL
+  beta0 <- NULL
   
   #save data as a dataframe
   dataset <- data.frame(data)
@@ -260,42 +263,49 @@ yhat.function <- function(data, yvar, xvar, n){
     x <- train[[xvar]]
     y <- train[[yvar]]
     
-    #vectors of x and y variables from the testing data
-    testx <- test[[xvar]]
-    testy <- test[[yvar]]
-    
     #use training data to model yvar on xvar
     #calculate beta1, the slope
-    beta1 <- sum((x - meanx)*(y - meany)) / sum((x - meanx)^2)
+    beta1[i] <- sum((x - meanx)*(y - meany)) / sum((x - meanx)^2)
     
     #calculate beta0, the intercept
-    beta0 <- meany - beta1*meanx
-    
-    #predict yhat, the predicted outcome, for testing data
-    yhat <- round(beta0 + beta1*testx)
+    beta0[i] <- meany - beta1[i]*meanx
   }
   
-  #return bagging.cm
-  return(yhat)
+  #vectors of x and y variables from the testing data
+  testx <- test[[xvar]]
+  testy <- test[[yvar]]
+  
+  mean.beta1 <- mean(beta1)
+  mean.beta0 <- mean(beta0)
+  
+  #predict yhat, the predicted outcome, for testing data
+  yhat <- round(mean.beta0 + mean.beta1*testx)
+  
+  list <- list(yhat, testy)
+  
+  return(list)
   
 }
 
-#TEST w titanic data
-yhat <- yhat.function(titanic, "Survived", "Pclass", 25)
+#save this list as a dataframe (using our titanic dataset as an example)
+bagging.results <- cm.bagging.function(titanic, "Survived", "Pclass", 25)
+bagging.results.df <- data.frame(bagging.results)
 
-#HOW would i create a confusion matrix with this?? 
-  linear.cm <- table(yhat.lm, testy) #<- how could i get "testy"
-return(confusionMatrix(linear.cm, mode = "everything"))
+#Now, build a confusion matrix from this 
+yhat <- bagging.results.df[,1]
+testy <- bagging.results.df[,2]
 
- 
-   
-#YHAT.LM.FUNCTION
-yhat.lm.function <- function(data, yvar, xvar){
+bagging.confusion <- table(yhat,testy)
+confusionMatrix(bagging.confusion, mode = "everything")
+
+
+#create a function that generates a list to be used to generate a confusion matrix for our LM model
+cm.lm.function <- function(data, yvar, xvar){
     #Inputs:
     #data: dataset to use, either built-in on R or in the environment
     #yvar: outcome variable
     #xvar: predictor variable
-    #Output: percentage of error
+    #Output: list of preditions and true results (to be used to build a confusion matrix)
     
     #save data as a dataframe
     dataset <- data.frame(data)
@@ -332,7 +342,7 @@ yhat.lm.function <- function(data, yvar, xvar){
     
     model.data <- test
     
-    #predict yhat, the predicted outcome, for testing data
+    #predict yhat.lm, the predicted outcome, for testing data
     yhat.lm <- round(predict(model1,
                              model.data,
                              type = 'response'))
@@ -342,14 +352,13 @@ yhat.lm.function <- function(data, yvar, xvar){
     
   }
   
-  #using titanic data
-test <- yhat.lm.function(titanic, "Survived", "Pclass")
-
-test.2 <- data.frame(test)
+#save this list as a dataframe (using our titanic dataset as an example)
+lm.results <- cm.lm.function(titanic, "Survived", "Pclass")
+lm.results.df <- data.frame(lm.results)
 
 #Now, build a confusion matrix from this 
-yhat <- test.2[,1]
-testy <- test.2[,2]
+yhat <- lm.results.df[,1]
+testy <- lm.results.df[,2]
 
 lm.confusion <- table(yhat,testy)
 confusionMatrix(lm.confusion, mode = "everything")
