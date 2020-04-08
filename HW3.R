@@ -70,20 +70,16 @@ bagging.function <- function(data, yvar, xvar, n){
   yhat <- round(mean.beta0 + mean.beta1*testx)
   
   #compare yhat (predicted y) and testy (the actual y) for accuracy
-  accurate <- ifelse(yhat.lm == testy, 
+  accurate <- ifelse(yhat == testy, 
                      1,
                      0)
   
   #calculate error rate of this model
-  # error <- 1 - sum(accurate)/length(accurate)
-  # 
-  #add to the error vector the error rate of this model
-  # return(mean(error))
+  error <- 1 - sum(accurate)/length(accurate)
   
-  #create a confusion matrix
-  bagging.cm <- table(yhat, testy)
-  return(confusionMatrix(bagging.cm, mode = "everything"))
-
+  #add to the error vector the error rate of this model
+  return(mean(error))
+  
 }
 
 #using titanic data
@@ -152,14 +148,11 @@ lm.function <- function(data, yvar, xvar){
                            0)
         
   #calculate and return the error
-  #error <- 1 - sum(accurate)/length(accurate)
+  error <- 1 - sum(accurate)/length(accurate)
   
-  #return(error)
+  return(error)
         
   #create a confusion matrix
-  linear.cm <- table(yhat.lm, testy)
-  return(confusionMatrix(linear.cm, mode = "everything"))
-        
 }
 
 
@@ -368,7 +361,6 @@ yhat <- test.2[,1]
 testy <- test.2[,2]
 
 lm.confusion <- table(yhat,testy)
-
 confusionMatrix(lm.confusion, mode = "everything")
 
 
