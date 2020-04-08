@@ -219,8 +219,8 @@ var(lm)
 
 
 
-#create a function that generates a list to be used to generate a confusion matrix for our BAGGING model
-cm.bagging.function <- function(data, yvar, xvar, n){
+#create a function that generates a list to be used to generate a confusion matrix for both models
+cm.function <- function(data, yvar, xvar, n){
   #Inputs:
   #data: dataset to use, either built-in on R or in the environment
   #yvar: outcome variable
@@ -280,96 +280,73 @@ cm.bagging.function <- function(data, yvar, xvar, n){
   #predict yhat, the predicted outcome, for testing data
   yhat <- round(mean.beta0 + mean.beta1*testx)
   
-  list <- list(yhat, testy)
-  
-  return(list)
-  
-}
-
-#save this list as a dataframe (using our titanic dataset as an example)
-bagging.results <- cm.bagging.function(titanic, "Survived", "Pclass", 25)
-bagging.results.df <- data.frame(bagging.results)
-
-#Now, build a confusion matrix from this 
-yhat <- bagging.results.df[,1]
-testy <- bagging.results.df[,2]
-
-bagging.confusion <- table(yhat,testy)
-confusionMatrix(bagging.confusion, mode = "everything")
-
-
-#create a function that generates a list to be used to generate a confusion matrix for our LM model
-cm.lm.function <- function(data, yvar, xvar){
-  #Inputs:
-  #data: dataset to use, either built-in on R or in the environment
-  #yvar: outcome variable
-  #xvar: predictor variable
-  #Output: list of preditions and true results (to be used to build a confusion matrix)
-  
-  #save data as a dataframe
-  dataset <- data.frame(data)
-  
-  #get rid of observations in which the xvar and/or yvar.lm are missing
-  #save it to dataset2
-  notNA <- which(is.na(dataset[[xvar]]) == FALSE & is.na(dataset[[yvar]]) == FALSE, arr.ind=TRUE) 
-  dataset2 <- dataset[notNA, ]
-  
-  #create index for bagging
-  indexes <- sample(1:nrow(dataset2), 
-                    size = nrow(dataset2),
-                    replace = TRUE)
-  
-  #create training data with the indexes created above
-  train <- dataset2[indexes, ]
-  
-  #create testing datta with the indexes not included in training data
-  test <- dataset2[-indexes, ]
-  
-  #vectors of x and y variables from the training data
-  x <- train[[xvar]]
-  y <- train[[yvar]]
-  
-  #vectors of x and y variables from the testing data
-  testx <- test[[xvar]]
-  testy <- test[[yvar]]
-  
+  #now, create an LM model
   model.data <- train
   
-  #create lm function
   model1 <- lm(model.data[[yvar]] ~ model.data[[xvar]],
                data = model.data)
   
+  #predict yhat.lm, the predicted outcome, for testing data
   model.data <- test
   
-  #predict yhat.lm, the predicted outcome, for testing data
   yhat.lm <- round(predict(model1,
                            model.data,
                            type = 'response'))
-  list <- list(yhat.lm, testy)
   
-  return(list)
+  output <- data.frame(yhat, yhat.lm, testy)
+ 
+  return(output)
   
 }
 
-#save this list as a dataframe (using our titanic dataset as an example)
-lm.results <- cm.lm.function(titanic, "Survived", "Pclass")
-lm.results.df <- data.frame(lm.results)
+results <- cm.function(titanic, "Survived", "Pclass", 25)
+bagging.results.df <- data.frame(results)
 
-#Now, build a confusion matrix from this 
-yhat <- lm.results.df[,1]
-testy <- lm.results.df[,2]
+yhat <- bagging.results.df[,1]
+yhat.lm <- bagging.results.df[,2]
+testy <- bagging.results.df[,3]
 
-lm.confusion <- table(yhat,testy)
-confusionMatrix(lm.confusion, mode = "everything")
+#BAGGING confusion matrix
+bagging.confusion <- table(yhat,testy)
+confusionMatrix(bagging.confusion, mode = "everything")
+
+#LM confusion matrix
+bagging.confusion <- table(yhat.lm,testy)
+confusionMatrix(bagging.confusion, mode = "everything")
+
+#plot these results
+model.data <- data.frame(yhat,
+                         yhat.lm,
+                         obs = 1:length(yhat.lm))
+
+gathered.model.data <- model.data %>%
+  gather(key = "model",
+         value = "pred",
+         -obs)
+
+gathered.model.data %>%
+  filter(obs <= 50) %>%
+  ggplot(aes(x = model,
+             y = obs)) +
+  geom_tile(aes(fill = factor(pred)),
+            color = "black")
 
 
+#Now, we can make accuracy plots
+model.data.2 <- data.frame(bag = yhat == testy,
+                         lm = yhat.lm == testy,
+                         obs = 1:length(yhat.lm))
 
+gathered.model.data.2 <- model.data.2 %>%
+  gather(key = "model",
+         value = "pred",
+         -obs)
 
-
-
-
-
-
-
+gathered.model.data.2 %>%
+  filter(obs <= 50) %>%
+  ggplot(aes(x = model,
+             y = obs)) +
+  geom_tile(aes(fill = factor(pred)),
+            color = "black")
 
 
