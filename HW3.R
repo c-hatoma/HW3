@@ -1,4 +1,4 @@
-# Let's get started on this homework, eh?
+# Libraries and data ------------------------------------------------------
 
 library(tidyverse)
 library(rpart)
@@ -8,7 +8,10 @@ library(caret)
 #begin with the titanic dataset
 titanic <- read_csv(file.choose())
 
-#Bagging Function
+
+
+# Bagging function --------------------------------------------------------
+
 bagging.function <- function(data, yvar, xvar, n){
   #Inputs:
   #data: dataset to use, either built-in on R or in the environment
@@ -91,8 +94,9 @@ bagging.function(titanic, "Survived", "Age", 25)
 bagging.function(mtcars, "am", "mpg", 25)
 bagging.function(mtcars, "am", "cyl", 25)
 
-#_____________________________________________________________________
 
+
+# LM Function -------------------------------------------------------------
 
 #LM Function
 lm.function <- function(data, yvar, xvar){
@@ -166,8 +170,7 @@ lm.function(mtcars, "am", "cyl")
 
 
 
-
-#Similarities: 
+# Comparing the bagged and lm functions based on spread -----------------------------------
 
 #If one runs the bagged function with the same input multiple times, 
 #the error rate remains similar each time the function runs.
@@ -219,7 +222,11 @@ var(lm)
 
 
 
-#create a function that generates a list to be used to generate a confusion matrix for our BAGGING model
+
+# Replicating functions to produce confusion matrices (CM) ---------------------
+
+# Bagging CM list ---------------------------------------------------------
+
 cm.bagging.function <- function(data, yvar, xvar, n){
   #Inputs:
   #data: dataset to use, either built-in on R or in the environment
@@ -227,7 +234,7 @@ cm.bagging.function <- function(data, yvar, xvar, n){
   #xvar: predictor variable
   #n: number of bagged linear models user wants
   #Output: list of preditions and true results (to be used to build a confusion matrix)
-  
+
   #create a null vector of errors for each of the models
   beta1 <- NULL
   beta0 <- NULL
@@ -298,14 +305,15 @@ bagging.confusion <- table(yhat,testy)
 confusionMatrix(bagging.confusion, mode = "everything")
 
 
-#create a function that generates a list to be used to generate a confusion matrix for our LM model
+# LM CM list ----------------------------------------------------------------------
+
 cm.lm.function <- function(data, yvar, xvar){
   #Inputs:
   #data: dataset to use, either built-in on R or in the environment
   #yvar: outcome variable
   #xvar: predictor variable
   #Output: list of preditions and true results (to be used to build a confusion matrix)
-  
+
   #save data as a dataframe
   dataset <- data.frame(data)
   
@@ -361,6 +369,9 @@ testy <- lm.results.df[,2]
 
 lm.confusion <- table(yhat,testy)
 confusionMatrix(lm.confusion, mode = "everything")
+
+
+# Comparison based on CM --------------------------------------------------
 
 
 
