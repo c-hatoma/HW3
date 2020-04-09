@@ -1,4 +1,4 @@
-# Let's get started on this homework, eh?
+# Libraries and data ------------------------------------------------------
 
 library(tidyverse)
 library(rpart)
@@ -8,7 +8,10 @@ library(caret)
 #begin with the titanic dataset
 titanic <- read_csv(file.choose())
 
-#Bagging Function
+
+
+# Bagging function --------------------------------------------------------
+
 bagging.function <- function(data, yvar, xvar, n){
   #Inputs:
   #data: dataset to use, either built-in on R or in the environment
@@ -91,8 +94,9 @@ bagging.function(titanic, "Survived", "Age", 25)
 bagging.function(mtcars, "am", "mpg", 25)
 bagging.function(mtcars, "am", "cyl", 25)
 
-#_____________________________________________________________________
 
+
+# LM Function -------------------------------------------------------------
 
 #LM Function
 lm.function <- function(data, yvar, xvar){
@@ -109,49 +113,49 @@ lm.function <- function(data, yvar, xvar){
   #save it to dataset2
   notNA <- which(is.na(dataset[[xvar]]) == FALSE & is.na(dataset[[yvar]]) == FALSE, arr.ind=TRUE) 
   dataset2 <- dataset[notNA, ]
-    
+  
   #create index to separate training and testing data
   indexes <- sample(1:nrow(dataset2),
                     size = nrow(dataset2),
                     replace = TRUE)
-        
+  
   #create training data with the indexes created above
   train <- dataset2[indexes, ]
-        
+  
   #create testing datta with the indexes not included in training data
   test <- dataset2[-indexes, ]
-        
+  
   #vectors of x and y variables from the training data
   x <- train[[xvar]]
   y <- train[[yvar]]
-        
+  
   #vectors of x and y variables from the testing data
   testx <- test[[xvar]]
   testy <- test[[yvar]]
-       
+  
   model.data <- train
-        
+  
   #create lm function
   model1 <- lm(model.data[[yvar]] ~ model.data[[xvar]],
                data = model.data)
-        
+  
   model.data <- test
-        
+  
   #predict yhat, the predicted outcome, for testing data
   yhat.lm <- round(predict(model1,
                            model.data,
                            type = 'response'))
-        
+  
   #compare yhat (predicted y) and testy (the actual y) for accuracy
   accurate <- ifelse(yhat.lm == testy, 
-                           1,
-                           0)
-        
+                     1,
+                     0)
+  
   #calculate and return the error
   error <- 1 - sum(accurate)/length(accurate)
   
   return(error)
-        
+  
   #create a confusion matrix
 }
 
@@ -166,8 +170,7 @@ lm.function(mtcars, "am", "cyl")
 
 
 
-
-#Similarities: 
+# Comparing the bagged and lm functions based on spread -----------------------------------
 
 #If one runs the bagged function with the same input multiple times, 
 #the error rate remains similar each time the function runs.
@@ -219,7 +222,14 @@ var(lm)
 
 
 
-#create a function that generates a list to be used to generate a confusion matrix for both models
+
+# Replicating functions to produce confusion matrices (CM) ---------------------
+
+# Bagging and LM CM list ---------------------------------------------------------
+# To gain futher insight on the differences between our bagging and linear models, we create a function that
+# generates a dataframe of bagging and linear predicted values, as well as the "true" values for a given dataset.
+# This is a modified version of both of our previous models.
+
 cm.function <- function(data, yvar, xvar, n){
   #Inputs:
   #data: dataset to use, either built-in on R or in the environment
@@ -294,27 +304,28 @@ cm.function <- function(data, yvar, xvar, n){
                            type = 'response'))
   
   output <- data.frame(yhat, yhat.lm, testy)
- 
+  
   return(output)
   
 }
 
+#run cm.function with the "titanic" dataset, 
 results <- cm.function(titanic, "Survived", "Pclass", 25)
-bagging.results.df <- data.frame(results)
 
-yhat <- bagging.results.df[,1]
-yhat.lm <- bagging.results.df[,2]
-testy <- bagging.results.df[,3]
+#isolate each column
+yhat <- results[,1]
+yhat.lm <- results[,2]
+testy <- results[,3]
 
-#BAGGING confusion matrix
+#create BAGGING confusion matrix
 bagging.confusion <- table(yhat,testy)
 confusionMatrix(bagging.confusion, mode = "everything")
 
-#LM confusion matrix
-bagging.confusion <- table(yhat.lm,testy)
-confusionMatrix(bagging.confusion, mode = "everything")
+#create LM confusion matrix
+lm.confusion <- table(yhat.lm,testy)
+confusionMatrix(lm.confusion, mode = "everything")
 
-#plot these results
+#Plot These Results
 model.data <- data.frame(yhat,
                          yhat.lm,
                          obs = 1:length(yhat.lm))
@@ -334,8 +345,8 @@ gathered.model.data %>%
 
 #Now, we can make accuracy plots
 model.data.2 <- data.frame(bag = yhat == testy,
-                         lm = yhat.lm == testy,
-                         obs = 1:length(yhat.lm))
+                           lm = yhat.lm == testy,
+                           obs = 1:length(yhat.lm))
 
 gathered.model.data.2 <- model.data.2 %>%
   gather(key = "model",
@@ -350,6 +361,26 @@ gathered.model.data.2 %>%
             color = "black")
 
 
-bloop bloop
+# Comparison based on CM --------------------------------------------------
 
+
+#Creating the confusion matrices for both models allows us to compare what factors
+# may be underlying any differences in accuracy.  In the case of our "titanic" dataset,
+# we find that both models exhibit identical accuracies; they predicted exactly the same
+# outcomes for all observations in the sample.  To confirm that this is not due to an error 
+# in our coding, we re-ran our cm.function WITHOUT rounding either model's predictions.
+# The unrounded predictions differ between algorithms, but this difference is very small.
+# Most importantly, both algorithms always predict on the same side of the 0.5 threshold.
+# As long as both algorithms round their predictions in the same direction for each observation,
+# their accuracies will remain identical. Both algorithms are correct approximately 67% of the time.
+# They correctly predict the "positive" class (An individual dying) 83% of the time. 
+
+
+# Additionally, we visualize these results in two plots.  The first confirms our findings that both models
+# predict the same outcome in all cases.  As expected, we see a higher frequency of predicted "positive" 
+# outcomes (Survived = 0).  We generate a second graph, which compares the accuracies of the two models.
+# As our confusion matricies showed, the predicted values between both models with be true or false for
+# the same observation.  Given the identical accuracies of our two models, these graphics do not add
+# much additional information to our understanding.  However, for a different dataset, we might use these
+# graphics to compare differences in sensitivity bewtween our models.  
 
